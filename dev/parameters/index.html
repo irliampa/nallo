@@ -656,6 +656,14 @@
 <td></td>
 </tr>
 <tr>
+<td><code>skip_methylation_annotation</code></td>
+<td>Skip methylation annotation</td>
+<td><code>boolean</code></td>
+<td>False</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
 <td><code>skip_repeat_calling</code></td>
 <td>Skip tandem repeat calling</td>
 <td><code>boolean</code></td>
@@ -1159,6 +1167,14 @@
 <td></td>
 <td></td>
 </tr>
+<tr>
+<td><code>fai</code></td>
+<td>Reference genome index file</td>
+<td><code>string</code></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2 id="institutional-config-options">Institutional config options</h2>
@@ -1544,6 +1560,14 @@
 <td></td>
 </tr>
 <tr>
+<td><code>mitochondrial_caller</code></td>
+<td>Which mitochondrial caller to use for mitochondrial variant calling (<code>deepvariant</code>)</td>
+<td><code>string</code></td>
+<td>deepvariant</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
 <td><code>alignment_processes</code></td>
 <td>If alignment_processes is bigger than 1, input files will be split and aligned in parallel to reduce processing time.</td>
 <td><code>integer</code></td>
@@ -1564,6 +1588,22 @@
 <td>VEP cache version</td>
 <td><code>integer</code></td>
 <td>110</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>vep_mitochondrial_genome_distance</code></td>
+<td>The distance parameter used in VEP for mitochondrial SNVs</td>
+<td><code>integer</code></td>
+<td>0</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>vep_nuclear_genome_distance</code></td>
+<td>The distance parameter used in VEP for nuclear SNVs</td>
+<td><code>integer</code></td>
+<td>5000</td>
 <td></td>
 <td></td>
 </tr>
@@ -1913,7 +1953,7 @@
 </tr>
 <tr>
 <td><code>sniffles_min_segment_length</code></td>
-<td>Discard a read if non of its segment is larger than this in Sniffles.</td>
+<td>Discard a read if none of its segment is larger than this in Sniffles.</td>
 <td><code>number</code></td>
 <td>500</td>
 <td></td>

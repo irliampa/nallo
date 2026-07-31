@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -531,6 +531,17 @@
     <span class="md-ellipsis">
       
         Call SVs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call-mitochondrial-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Call mitochondrial variants
       
     </span>
   </a>
@@ -1146,6 +1157,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#call-mitochondrial-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Call mitochondrial variants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#phasing" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1601,13 +1623,23 @@ NB: The order of profiles is important! They are loaded in sequence, so later pr
 <p>If you have multiple files per sample, they can be added on separate rows. Keep all columns except <code>file</code> identical for each sample. The files will be merged after alignment or before assembly.</p>
 </div>
 <h3 id="presets">Presets</h3>
-<p>This pipeline comes with three different presets that should be set with the <code>--preset</code> parameter: <code>revio</code> (default), <code>pacbio</code> or <code>ONT_R10</code>. The preset parameter controls certain technology specific tools and parameters.</p>
+<p>This pipeline comes with four different presets that should be set with the <code>--preset</code> parameter: <code>revio</code> (default), <code>pacbio</code>, <code>ONT_R10</code> or <code>ONT_R10_AS</code>. The preset parameter controls certain technology specific tools and parameters.</p>
 <div class="admonition info">
 <p class="admonition-title">Preset effects on subworkflows</p>
 <ul>
-<li><code>--skip_repeat_annotation</code> will be set to <code>true</code> for <code>ONT_R10</code></li>
-<li><code>--skip_call_paralogs</code> will be set to <code>true</code> for <code>ONT_R10</code></li>
+<li><code>--skip_repeat_annotation</code> will be set to <code>true</code> for <code>ONT_R10</code> and <code>ONT_R10_AS</code></li>
+<li><code>--skip_call_paralogs</code> will be set to <code>true</code> for <code>ONT_R10</code> and <code>ONT_R10_AS</code></li>
 <li><code>--skip_methylation_calling</code> will be set to <code>true</code> for <code>pacbio</code></li>
+<li><code>--skip_mitochondrial_calling</code> will be set to <code>true</code> for <code>ONT_R10_AS</code></li>
+</ul>
+</div>
+<div class="admonition info">
+<p class="admonition-title">ONT_R10_AS — adaptive sampling preset</p>
+<p><code>ONT_R10_AS</code> is intended for Oxford Nanopore adaptive sampling runs. In adaptive sampling, the sequencer selectively enriches reads from target regions in real time; rejected off-target reads are still output and will map across the genome. The preset inherits all <code>ONT_R10</code> settings and adds targeted-run behaviour on top.</p>
+<p>Provide the BED file of enriched regions with <code>--target_regions</code>. This single parameter automatically sets all region-related parameters (<code>--mosdepth_regions</code>, <code>--modkit_include_bed</code>, <code>--snv_call_regions</code>, <code>--sv_call_regions</code>). The pipeline will then:</p>
+<ul>
+<li>Filter aligned reads to on-target regions before cramino QC, so yield and N50 reflect enriched reads only</li>
+<li>Run mosdepth with per-region depth and coverage thresholds (≥20X, ≥30X) for each target region</li>
 </ul>
 </div>
 <h3 id="reference-files">Reference files</h3>
@@ -1651,6 +1683,10 @@ NB: The order of profiles is important! They are loaded in sequence, so later pr
 </tbody>
 </table>
 <p>Turned off with <code>--skip_alignment</code>.</p>
+<div class="admonition info">
+<p class="admonition-title">Using pbmm2 with fastq files</p>
+<p>pbmm2 can be used to align the reads to the reference. If you are running the pipeline with fastq files as input, they will be converted to bam files for the analysis, and a <code>DS:READTYPE=CCS</code> tag will be added to the header. Without this tag, pbmm2 will not be able to run successfully. This tag is only added under these conditions (pbmm2 as aligner and fastq as input).</p>
+</div>
 <h4 id="sex-check">Sex check</h4>
 <p>Some subworkflows are sex-dependent and need a sex-inference step if samples are input with unknown sex. This step requires <code>--somalier_sites</code>.</p>
 <table>
@@ -1778,6 +1814,53 @@ You can disable this behavior for both callers by setting <code>--create_maf_tra
 <p>Unannotated family-level VCFs per caller can be output with <code>--publish_unannotated_family_svs</code>.</p>
 </div>
 <p>Turned off with <code>--skip_sv_calling</code>.</p>
+<h4 id="call-mitochondrial-variants">Call mitochondrial variants</h4>
+<p>This subworkflow specifically calls mitochondrial variants. The resulting VCF file is then merged together with the VCF containing the nuclear variants.
+The mitochondrial caller can be selected with <code>--mitochondrial_caller</code>. Note that the mitorsaw <a href="https://github.com/PacificBiosciences/mitorsaw/blob/main/LICENSE.md">license</a> doesn't generally allow usage of ONT data.</p>
+<table>
+<thead>
+<tr>
+<th>Caller</th>
+<th>Parameter value</th>
+<th>Compatible data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mitorsaw</td>
+<td><code>mitorsaw</code></td>
+<td>Pacbio</td>
+</tr>
+<tr>
+<td>Deepvariant</td>
+<td><code>deepvariant</code></td>
+<td>Pacbio, ONT</td>
+</tr>
+</tbody>
+</table>
+<p>The following parameters can be used:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mitorsaw_minimum_maf</code></td>
+<td>Minimum minor allele frequency (MAF) for mitorsaw variant calling.</td>
+</tr>
+<tr>
+<td><code>mitorsaw_minimum_read_count</code></td>
+<td>Minimum read count to consider a heteroplasmic variant.</td>
+</tr>
+<tr>
+<td><code>mitochondrial_sv_min_size</code></td>
+<td>Minimum allele length difference (abs(strlen(REF)-strlen(ALT))) to classify a mitochondrial variant as an SV rather than a SNV/small indel.</td>
+</tr>
+</tbody>
+</table>
 <h4 id="phasing">Phasing</h4>
 <p>This subworkflow phases variants and haplotags aligned BAM files, and such relies on the alignment, SNV calling subworkflows, but requires no additional files.</p>
 <p>If SVs were called, they are phased together with SNVs if supported by the selected phaser.
@@ -2204,13 +2287,13 @@ They are loaded in sequence, so later profiles can overwrite earlier profiles.</
 <h2 id="custom-configuration">Custom configuration</h2>
 <h3 id="resource-requests">Resource requests</h3>
 <p>Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the pipeline steps, if the job exits with any of the error codes specified <a href="https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18">here</a> it will automatically be resubmitted with higher resources request (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.</p>
-<p>To change the resource requests, please see the <a href="https://nf-co.re/docs/usage/configuration#max-resources">max resources</a> and <a href="https://nf-co.re/docs/usage/configuration#tuning-workflow-resources">tuning workflow resources</a> section of the nf-core website.</p>
+<p>To change the resource requests, please see the <a href="https://nf-co.re/docs/running/configuration/nextflow-for-your-system#set-max-resources">max resources</a> and <a href="https://nf-co.re/docs/running/configuration/nextflow-for-your-system#customize-process-resources">customise process resources</a> section of the nf-core website.</p>
 <h3 id="custom-containers">Custom Containers</h3>
 <p>In some cases, you may wish to change the container or conda environment used by a pipeline steps for a particular tool. By default, nf-core pipelines use containers and software from the <a href="https://biocontainers.pro/">biocontainers</a> or <a href="https://bioconda.github.io/">bioconda</a> projects. However, in some cases the pipeline specified version maybe out of date.</p>
-<p>To use a different container from the default container or conda environment specified in a pipeline, please see the <a href="https://nf-co.re/docs/usage/configuration#updating-tool-versions">updating tool versions</a> section of the nf-core website.</p>
+<p>To use a different container from the default container or conda environment specified in a pipeline, please see the <a href="https://nf-co.re/docs/running/configuration/nextflow-for-your-system#update-tool-versions">updating tool versions</a> section of the nf-core website.</p>
 <h3 id="custom-tool-arguments">Custom Tool Arguments</h3>
 <p>A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.</p>
-<p>To learn how to provide additional arguments to a particular tool of the pipeline, please see the <a href="https://nf-co.re/docs/usage/configuration#customising-tool-arguments">customising tool arguments</a> section of the nf-core website.</p>
+<p>To learn how to provide additional arguments to a particular tool of the pipeline, please see the <a href="https://nf-co.re/docs/running/configuration/nextflow-for-your-system#modifying-tool-arguments">customising tool arguments</a> section of the nf-core website.</p>
 <h3 id="nf-coreconfigs">nf-core/configs</h3>
 <p>In most cases, you will only need to create a custom config as a one-off but if you and others within your organisation are likely to be running nf-core pipelines regularly and need to use the same settings regularly it may be a good idea to request that your custom config file is uploaded to the <code>nf-core/configs</code> git repository. Before you do this please can you test that the config file works with your pipeline of choice using the <code>-c</code> parameter. You can then create a pull request to the <code>nf-core/configs</code> repository with the addition of your config file, associated documentation file (see examples in <a href="https://github.com/nf-core/configs/tree/master/docs"><code>nf-core/configs/docs</code></a>), and amending <a href="https://github.com/nf-core/configs/blob/master/nfcore_custom.config"><code>nfcore_custom.config</code></a> to include your custom profile.</p>
 <p>See the main <a href="https://www.nextflow.io/docs/latest/config.html">Nextflow documentation</a> for more information about creating your own configuration files.</p>
@@ -2329,7 +2412,7 @@ We recommend adding the following line to your environment to limit this (typica
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "navigation.instant", "navigation.top", "navigation.tracking", "navigation.sections", "navigation.footer", "search.share", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
